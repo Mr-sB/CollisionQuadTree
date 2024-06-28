@@ -12,8 +12,8 @@ namespace CollisionQuadTree
             get => rect;
             set
             {
-                if (Rect.Equals(value)) return;
-                Rect = rect;
+                if (rect.Equals(value)) return;
+                rect = value;
                 Dirty = true;
             }
         }
