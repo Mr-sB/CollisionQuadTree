@@ -101,7 +101,8 @@ namespace CollisionQuadTree
             {
                 // 叶子节点，直接添加
                 Entities.Add(entity);
-                entity.ResetDirty();
+                entity.Removed = false;
+                entity.Dirty = false;
                 entity.AddOwner(this);
             }
             else
@@ -124,7 +125,7 @@ namespace CollisionQuadTree
                 {
                     if (EqualityComparer<T>.Default.Equals(entity.Item, item))
                     {
-                        entity.MarkRemove();
+                        entity.Removed = true;
                         return;
                     }
                 }
