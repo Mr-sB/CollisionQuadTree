@@ -19,8 +19,8 @@ namespace CollisionQuadTree
         }
 
         public T Item { get; private set; }
-        internal bool Dirty { get; private set; }
-        internal bool Removed { get; private set; }
+        public bool Dirty { get; private set; }
+        public bool Removed { get; private set; }
         /// <summary>
         /// 属于哪些节点
         /// </summary>

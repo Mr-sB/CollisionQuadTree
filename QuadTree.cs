@@ -81,18 +81,12 @@ namespace CollisionQuadTree
                     foreach (var node in toRemoveEntity.Owners)
                     {
                         var iterator = node.Parent;
-                        // 所有子节点都是叶子节点才有合并的条件
-                        while (iterator != null && iterator.AllChildrenAreLeaves)
+                        while (iterator != null)
                         {
-                            // 达到分层条件，不需要合并节点，直接停止循环
-                            if (iterator.AllEntitiesCount > MaxItemCount)
-                                break;
+                            // 尝试合并节点。如果不需要合并节点，直接停止循环
+                            if (!iterator.TryMerge()) break;
                             
-                            // 合并节点
-                            if (!iterator.Merge())
-                                break;
-                            // 合并成功
-                            // 继续往上判断是否需要合并
+                            // 合并成功，继续往上判断是否需要合并
                             iterator = iterator.Parent;
                         }
                     }

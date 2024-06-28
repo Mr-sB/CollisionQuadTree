@@ -24,7 +24,6 @@ namespace CollisionQuadTree
         /// 是否是叶子节点
         /// </summary>
         public bool IsLeaf { get; private set; }
-        public bool NeedSplit => IsLeaf && Depth < Tree.MaxDepth && Entities.Count >= Tree.MaxItemCount;
         /// <summary>
         /// 是否所有子节点都是叶子节点
         /// </summary>
@@ -39,7 +38,6 @@ namespace CollisionQuadTree
                 return true;
             }
         }
-
         public int AllEntitiesCount
         {
             get
@@ -55,15 +53,18 @@ namespace CollisionQuadTree
                 return count;
             }
         }
+        public bool NeedSplit => IsLeaf && Depth < Tree.MaxDepth && Entities.Count >= Tree.MaxItemCount;
+        public bool NeedMerge => AllChildrenAreLeaves && AllEntitiesCount <= Tree.MaxItemCount;
+
         
-        public TreeNode(QuadTree<T> tree, TreeNode<T> parent, Rect rect, int depth)
+        internal TreeNode(QuadTree<T> tree, TreeNode<T> parent, Rect rect, int depth)
         {
             Children = null;
             Entities = new HashSet<Entity<T>>();
             Set(tree, parent, rect, depth);
         }
 
-        public void Set(QuadTree<T> tree, TreeNode<T> parent, Rect rect, int depth)
+        internal void Set(QuadTree<T> tree, TreeNode<T> parent, Rect rect, int depth)
         {
             Tree = tree;
             Parent = parent;
@@ -73,7 +74,7 @@ namespace CollisionQuadTree
             IsLeaf = true;
         }
 
-        public void Reset()
+        internal void Reset()
         {
             Tree = null;
             Parent = null;
@@ -86,17 +87,16 @@ namespace CollisionQuadTree
             IsLeaf = true;
         }
 
-        public bool Overlaps(Rect rect)
+        internal bool Overlaps(Rect rect)
         {
             return Rect.Overlaps(rect);
         }
         
-        public void Add(Entity<T> entity)
+        internal void Add(Entity<T> entity)
         {
             // 不在范围内，不需要添加
             if (!Rect.Overlaps(entity.Rect)) return;
-            if (NeedSplit)
-                Split();
+            TrySplit();
             if (IsLeaf)
             {
                 // 叶子节点，直接添加
@@ -115,7 +115,7 @@ namespace CollisionQuadTree
             }
         }
 
-        public void MarkRemove(T item)
+        internal void MarkRemove(T item)
         {
             foreach (var node in this)
             {
@@ -123,7 +123,10 @@ namespace CollisionQuadTree
                 foreach (var entity in node.Entities)
                 {
                     if (EqualityComparer<T>.Default.Equals(entity.Item, item))
+                    {
                         entity.MarkRemove();
+                        return;
+                    }
                 }
             }
         }
@@ -134,9 +137,9 @@ namespace CollisionQuadTree
             return Entities.Remove(entity);
         }
         
-        public void Query(Rect queryRect, [NotNull] List<Entity<T>> results)
+        internal void Query(Rect queryRect, [NotNull] List<Entity<T>> results)
         {
-            // 不在范围内，不需要添加
+            // 不在范围内，不需要查询
             if (!Rect.Overlaps(queryRect)) return;
 
             if (IsLeaf)
@@ -154,9 +157,9 @@ namespace CollisionQuadTree
             }
         }
 
-        internal bool Merge()
+        internal bool TryMerge()
         {
-            if (!AllChildrenAreLeaves) return false;
+            if (!NeedMerge) return false;
             
             IsLeaf = true;
             // Children的所有实体重新归纳到当前节点
@@ -173,9 +176,10 @@ namespace CollisionQuadTree
             return true;
         }
         
-        private void Split()
+        private bool TrySplit()
         {
-            if (!IsLeaf) return;
+            if (!NeedSplit) return false;
+            
             IsLeaf = false;
             int childDepth = Depth + 1;
             if (Children == null)
@@ -196,6 +200,7 @@ namespace CollisionQuadTree
                 Add(entity);
             }
             Entities.Clear();
+            return true;
         }
 
         public IEnumerator<TreeNode<T>> GetEnumerator()
