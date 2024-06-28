@@ -137,7 +137,12 @@ namespace CollisionQuadTree
             return Entities.Remove(entity);
         }
         
-        internal void Query(Rect queryRect, [NotNull] List<Entity<T>> results)
+        /// <summary>
+        /// 查询与哪些entity有交集
+        /// </summary>
+        /// <param name="queryRect">查询范围</param>
+        /// <param name="results">查询结果。因为实体可能存在于多个Node中，所以使用HashSet去重</param>
+        internal void Query(Rect queryRect, [NotNull] HashSet<Entity<T>> results)
         {
             // 不在范围内，不需要查询
             if (!Rect.Overlaps(queryRect)) return;
@@ -146,7 +151,8 @@ namespace CollisionQuadTree
             {
                 foreach (var entity in Entities)
                 {
-                    if (entity.Query(queryRect))
+                    // 该实体不存在多个Node中，或者查询结果里没有，则需要查询
+                    if ((entity.Owners.Count <= 1 || !results.Contains(entity)) && entity.Query(queryRect))
                         results.Add(entity);
                 }
             }

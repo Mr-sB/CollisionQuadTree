@@ -116,11 +116,16 @@ namespace CollisionQuadTree
         {
             Root.MarkRemove(item);
         }
-
-        public List<Entity<T>> Query(Rect queryRect, List<Entity<T>> results = null)
+        
+        /// <summary>
+        /// 查询与哪些entity有交集
+        /// </summary>
+        /// <param name="queryRect">查询范围</param>
+        /// <param name="results">查询结果。因为实体可能存在于多个Node中，所以使用HashSet去重</param>
+        public HashSet<Entity<T>> Query(Rect queryRect, HashSet<Entity<T>> results = null)
         {
             if (results == null)
-                results = new List<Entity<T>>();
+                results = new HashSet<Entity<T>>();
             else
                 results.Clear();
 
