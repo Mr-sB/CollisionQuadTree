@@ -1,9 +1,10 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace CollisionQuadTree
 {
-    public class QuadTree<T>
+    public class QuadTree<T> : IEnumerable<TreeNode<T>>
     {
         public int MaxDepth { get; private set; }
         public int MaxItemCount { get; private set; }
@@ -132,6 +133,16 @@ namespace CollisionQuadTree
             Root.Query(queryRect, results);
             
             return results;
+        }
+
+        public IEnumerator<TreeNode<T>> GetEnumerator()
+        {
+            return Root.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }
