@@ -62,7 +62,7 @@ namespace CollisionQuadTree
 
         public void MarkRemove()
         {
-            Removed = false;
+            Removed = true;
         }
         
         internal void AddOwner(TreeNode<T> owner)
