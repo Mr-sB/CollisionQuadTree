@@ -56,7 +56,7 @@ namespace CollisionQuadTree
                     // dirty的对象直接标记移除，后续重新添加
                     if (!entity.Removed && entity.Dirty)
                     {
-                        entity.Removed = true;
+                        entity.MarkRemove();
                         reInsertEntities.Add(entity);
                     }
                     // 使用Set去重，因为实体可能存在于多个Node中
@@ -109,7 +109,7 @@ namespace CollisionQuadTree
 
         /// <summary>
         /// 标记移除给定item的实体
-        /// 最好直接调用外部持有的Entity.Removed = true直接标记
+        /// 最好直接调用外部持有的Entity.MarkRemove直接标记
         /// </summary>
         /// <param name="item"></param>
         public void MarkRemove(T item)

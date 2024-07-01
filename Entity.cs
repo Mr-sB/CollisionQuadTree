@@ -19,8 +19,8 @@ namespace CollisionQuadTree
         }
 
         public T Item { get; private set; }
-        public bool Dirty { get; internal set; }
-        public bool Removed { get; set; }
+        public bool Dirty { get; private set; }
+        public bool Removed { get; private set; }
         /// <summary>
         /// 属于哪些节点
         /// </summary>
@@ -59,6 +59,11 @@ namespace CollisionQuadTree
         {
             return !Removed && Overlaps(queryRect);
         }
+
+        public void MarkRemove()
+        {
+            Removed = false;
+        }
         
         internal void AddOwner(TreeNode<T> owner)
         {
@@ -73,6 +78,13 @@ namespace CollisionQuadTree
         internal void ClearOwners()
         {
             Owners.Clear();
+        }
+
+        internal void OnAddToNode(TreeNode<T> node)
+        {
+            Removed = false;
+            Dirty = false;
+            AddOwner(node);
         }
     }
 }
