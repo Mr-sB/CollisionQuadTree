@@ -48,23 +48,9 @@ namespace CollisionQuadTree
         {
             reInsertEntities.Clear();
             toRemoveEntities.Clear();
-            
-            // 处理Dirty的实体
-            foreach (var node in Root)
-            {
-                foreach (var entity in node.Entities)
-                {
-                    // dirty的对象直接标记移除，后续重新添加
-                    if (!entity.Removed && entity.Dirty)
-                    {
-                        entity.MarkRemove();
-                        reInsertEntities.Add(entity);
-                    }
-                    // 使用Set去重，因为实体可能存在于多个Node中
-                    if (entity.Removed)
-                        toRemoveEntities.Add(entity);
-                }
-            }
+
+            // 预处理实体
+            PreprocessingEntities(Root);
 
             // 处理Removed的实体
             if (toRemoveEntities.Count > 0)
@@ -143,6 +129,31 @@ namespace CollisionQuadTree
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        private void PreprocessingEntities(TreeNode<T> parent)
+        {
+            // 没有脏标记不需要处理了
+            if (parent == null || !parent.Dirty) return;
+            parent.ClearDirty();
+            
+            // 记录需要操作的Entities
+            foreach (var entity in parent.Entities)
+            {
+                if (entity.Removed)
+                    toRemoveEntities.Add(entity);
+                else if (entity.Dirty)
+                {
+                    // dirty的对象直接标记移除，后续重新添加
+                    toRemoveEntities.Add(entity);
+                    reInsertEntities.Add(entity);
+                }
+            }
+            
+            // 递归处理子节点
+            if (!parent.IsLeaf)
+                foreach (var child in parent.Children)
+                    PreprocessingEntities(child);
         }
     }
 }

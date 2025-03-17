@@ -19,7 +19,22 @@ namespace CollisionQuadTree
         }
 
         public T Item { get; private set; }
-        public bool Dirty { get; private set; }
+
+        private bool _dirty;
+        public bool Dirty
+        {
+            get => _dirty;
+            private set
+            {
+                if (_dirty == value) return;
+                _dirty = value;
+                // owner节点脏标记
+                if (value)
+                    foreach (var owner in Owners)
+                        owner?.MarkDirty();
+            }
+        }
+
         public bool Removed { get; private set; }
         /// <summary>
         /// 属于哪些节点
@@ -63,11 +78,14 @@ namespace CollisionQuadTree
         public void MarkRemove()
         {
             Removed = true;
+            Dirty = true;
         }
         
         internal void AddOwner(TreeNode<T> owner)
         {
             Owners.Add(owner);
+            if (Dirty)
+                owner.MarkDirty();
         }
         
         internal void RemoveOwner(TreeNode<T> owner)
@@ -82,8 +100,6 @@ namespace CollisionQuadTree
 
         internal void OnAddToNode(TreeNode<T> node)
         {
-            Removed = false;
-            Dirty = false;
             AddOwner(node);
         }
     }

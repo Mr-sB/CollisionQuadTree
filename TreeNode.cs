@@ -55,6 +55,7 @@ namespace CollisionQuadTree
         }
         public bool NeedSplit => IsLeaf && Depth < Tree.MaxDepth && Entities.Count >= Tree.MaxItemCount;
         public bool NeedMerge => AllChildrenAreLeaves && AllEntitiesCount <= Tree.MaxItemCount;
+        public bool Dirty { get; private set; }
 
         
         internal TreeNode(QuadTree<T> tree, TreeNode<T> parent, Rect rect, int depth)
@@ -224,6 +225,18 @@ namespace CollisionQuadTree
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        internal void MarkDirty()
+        {
+            if (Dirty) return;
+            Dirty = true;
+            Parent?.MarkDirty();
+        }
+
+        internal void ClearDirty()
+        {
+            Dirty = false;
         }
     }
 }
