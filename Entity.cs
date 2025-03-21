@@ -24,7 +24,7 @@ namespace CollisionQuadTree
         public bool Dirty
         {
             get => _dirty;
-            private set
+            internal set
             {
                 if (_dirty == value) return;
                 _dirty = value;
@@ -101,11 +101,6 @@ namespace CollisionQuadTree
         internal void ClearOwners()
         {
             Owners.Clear();
-        }
-
-        internal void OnAddToNode(TreeNode<T> node)
-        {
-            AddOwner(node);
         }
     }
 }

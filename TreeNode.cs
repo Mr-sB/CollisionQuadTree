@@ -93,25 +93,28 @@ namespace CollisionQuadTree
             return Rect.Overlaps(rect);
         }
         
-        internal void Add(Entity<T> entity)
+        internal bool Add(Entity<T> entity)
         {
             // 不在范围内，不需要添加
-            if (!Rect.Overlaps(entity.Rect)) return;
+            if (!Overlaps(entity.Rect)) return false;
             TrySplit();
             if (IsLeaf)
             {
                 // 叶子节点，直接添加
                 Entities.Add(entity);
-                entity.OnAddToNode(this);
+                entity.AddOwner(this);
+                return true;
             }
             else
             {
+                bool added = false;
                 foreach (var child in Children)
                 {
                     // 如果一个实体跨越了多个象限，那么添加到所有跨越的象限中
                     if (child.Overlaps(entity.Rect))
-                        child.Add(entity);
+                        added |= child.Add(entity);
                 }
+                return added;
             }
         }
 
@@ -145,7 +148,7 @@ namespace CollisionQuadTree
         internal void Query(Rect queryRect, [NotNull] HashSet<Entity<T>> results)
         {
             // 不在范围内，不需要查询
-            if (!Rect.Overlaps(queryRect)) return;
+            if (!Overlaps(queryRect)) return;
 
             if (IsLeaf)
             {
@@ -203,7 +206,14 @@ namespace CollisionQuadTree
             foreach (var entity in Entities)
             {
                 entity.RemoveOwner(this);
-                Add(entity);
+                // 该节点无法处理的实体
+                // 即使有其他节点还持有这个实体，但是一定是dirty的状态，会再次走reinsert逻辑
+                if (!Add(entity))
+                {
+                    // 再次标脏，避免出错
+                    entity.Dirty = true;
+                    Tree.OutsideEntities.Add(entity);
+                }
             }
             Entities.Clear();
             return true;

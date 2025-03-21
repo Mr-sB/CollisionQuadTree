@@ -9,16 +9,18 @@ namespace CollisionQuadTree
         public int MaxDepth { get; private set; }
         public int MaxItemCount { get; private set; }
         public TreeNode<T> Root { get; }
-        private List<Entity<T>> reInsertEntities;
+        private HashSet<Entity<T>> reInsertEntities;
         private HashSet<Entity<T>> toRemoveEntities; // 使用Set去重，因为实体可能存在于多个Node中
+        internal HashSet<Entity<T>> OutsideEntities; // 在Root范围之外的实体
 
         public QuadTree(int maxDepth, int maxItemCount, Rect rootRect)
         {
             MaxDepth = maxDepth;
             MaxItemCount = maxItemCount;
             Root = new TreeNode<T>(this, null, rootRect, 0);
-            reInsertEntities = new List<Entity<T>>();
+            reInsertEntities = new HashSet<Entity<T>>();
             toRemoveEntities = new HashSet<Entity<T>>();
+            OutsideEntities = new HashSet<Entity<T>>();
         }
 
         public void Set(int maxDepth, int maxItemCount, Rect rootRect)
@@ -29,6 +31,7 @@ namespace CollisionQuadTree
             Root.Set(this, null, rootRect, 0);
             reInsertEntities.Clear();
             toRemoveEntities.Clear();
+            OutsideEntities.Clear();
         }
 
         public void Reset()
@@ -38,6 +41,7 @@ namespace CollisionQuadTree
             Root.Reset();
             reInsertEntities.Clear();
             toRemoveEntities.Clear();
+            OutsideEntities.Clear();
         }
         
         /// <summary>
@@ -49,6 +53,27 @@ namespace CollisionQuadTree
             reInsertEntities.Clear();
             toRemoveEntities.Clear();
 
+            // 处理outside的实体
+            foreach (var outsideEntity in OutsideEntities)
+            {
+                if (outsideEntity.Removed)
+                    toRemoveEntities.Add(outsideEntity);
+                else if (outsideEntity.Dirty && Root.Overlaps(outsideEntity.Rect))
+                {
+                    // 在范围内了，可以添加
+                    reInsertEntities.Add(outsideEntity);
+                    toRemoveEntities.Add(outsideEntity);
+                }
+
+                // 如果没有节点持有该实体，去掉脏标记
+                // 否则保留，等待PreprocessingEntities继续使用和恢复脏标记
+                if (outsideEntity.Owners.Count <= 0)
+                    outsideEntity.ClearDirty();
+            }
+            foreach (var entity in toRemoveEntities)
+                OutsideEntities.Remove(entity);
+            
+            toRemoveEntities.Clear();
             // 预处理实体
             PreprocessingEntities(Root);
 
@@ -91,7 +116,11 @@ namespace CollisionQuadTree
 
         public void Add(Entity<T> entity)
         {
-            Root.Add(entity);
+            if (!Root.Add(entity))
+            {
+                // 添加的实体不在最大范围内，额外存储
+                OutsideEntities.Add(entity);
+            }
         }
 
         /// <summary>
