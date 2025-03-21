@@ -81,6 +81,11 @@ namespace CollisionQuadTree
             Dirty = true;
         }
         
+        internal void ClearDirty()
+        {
+            Dirty = false;
+        }
+        
         internal void AddOwner(TreeNode<T> owner)
         {
             Owners.Add(owner);

@@ -148,6 +148,8 @@ namespace CollisionQuadTree
                     toRemoveEntities.Add(entity);
                     reInsertEntities.Add(entity);
                 }
+                
+                entity.ClearDirty();
             }
             
             // 递归处理子节点
