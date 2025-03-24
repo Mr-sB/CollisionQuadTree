@@ -152,7 +152,14 @@ namespace CollisionQuadTree
         /// <param name="item"></param>
         public void MarkRemove(T item)
         {
-            Root.MarkRemove(item);
+            foreach (var entity in allEntities)
+            {
+                if (EqualityComparer<T>.Default.Equals(entity.Item, item))
+                {
+                    entity.MarkRemove();
+                    return;
+                }
+            }
         }
         
         /// <summary>
