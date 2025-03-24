@@ -118,6 +118,30 @@ namespace CollisionQuadTree
             }
         }
 
+        private void ForceAdd(Entity<T> entity)
+        {
+            TrySplit();
+            if (IsLeaf)
+            {
+                // 叶子节点，直接添加
+                Entities.Add(entity);
+                entity.AddOwner(this);
+            }
+            else
+            {
+                bool added = false;
+                foreach (var child in Children)
+                {
+                    // 如果一个实体跨越了多个象限，那么添加到所有跨越的象限中
+                    if (child.Overlaps(entity.Rect))
+                        added |= child.Add(entity);
+                }
+                // 强制添加到最后
+                if (!added)
+                    Children[Children.Length - 1].ForceAdd(entity);
+            }
+        }
+
         internal void MarkRemove(T item)
         {
             foreach (var node in this)
@@ -207,12 +231,12 @@ namespace CollisionQuadTree
             {
                 entity.RemoveOwner(this);
                 // 该节点无法处理的实体
-                // 即使有其他节点还持有这个实体，但是一定是dirty的状态，会再次走reinsert逻辑
                 if (!Add(entity))
                 {
                     // 再次标脏，避免出错
                     entity.Dirty = true;
-                    Tree.OutsideEntities.Add(entity);
+                    // 强制添加到最后一个child中
+                    Children[Children.Length - 1].ForceAdd(entity);
                 }
             }
             Entities.Clear();
