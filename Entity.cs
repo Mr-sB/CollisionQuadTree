@@ -80,6 +80,11 @@ namespace CollisionQuadTree
             Removed = true;
             Dirty = true;
         }
+
+        internal void ClearRemove()
+        {
+            Removed = false;
+        }
         
         internal void ClearDirty()
         {

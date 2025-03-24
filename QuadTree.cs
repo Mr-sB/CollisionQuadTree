@@ -128,7 +128,15 @@ namespace CollisionQuadTree
         /// <returns>是否添加成功：重复添加返回false</returns>
         public bool Add(Entity<T> entity)
         {
-            if (!allEntities.Add(entity)) return false;
+            if (!allEntities.Add(entity))
+            {
+                // 在管理中的正常实体，不允许重复添加
+                if (!entity.Removed) return false;
+                // 实体标记为需要移除了，重新添加需要清除移除标记
+                // 这种情况算添加成功
+                entity.ClearRemove();
+                return true;
+            }
             if (!Root.Add(entity))
             {
                 // 添加的实体不在最大范围内，额外存储
