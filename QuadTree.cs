@@ -70,6 +70,7 @@ namespace CollisionQuadTree
                     // 在范围内了，可以添加
                     reInsertEntities.Add(outsideEntity);
                     toRemoveEntities.Add(outsideEntity);
+                    allEntities.Remove(outsideEntity);
                 }
 
                 // 如果没有节点持有该实体，去掉脏标记
@@ -209,6 +210,7 @@ namespace CollisionQuadTree
                     // 因为可能entity不在原本的node范围内了；也可能进入新的node范围内
                     // 需要重新添加才能归属到最正确的范围
                     toRemoveEntities.Add(entity);
+                    allEntities.Remove(entity);
                     reInsertEntities.Add(entity);
                 }
                 
